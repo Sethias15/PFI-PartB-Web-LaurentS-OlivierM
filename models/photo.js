@@ -20,8 +20,10 @@ export default class Photo extends Model {
     bindExtraData(instance) {
         instance = super.bindExtraData(instance);
         let usersRepository = new Repository(new UserModel());
+        let likesRepository = new Repository(new PhotoLikeModel());
         instance.Owner = usersRepository.get(instance.OwnerId);
         instance.OwnerName = instance.Owner.Name;
+        instance.Likes = likesRepository.get(instance.Id);
         return instance;
     }
 }

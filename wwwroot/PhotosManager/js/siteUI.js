@@ -95,6 +95,23 @@ function loggedUserMenu() {
             <span class="dropdown-item" id="listPhotosMenuCmd">
                 <i class="menuIcon fa fa-image mx-2"></i> Liste des photos
             </span>
+            <div class="dropdown-divider"></div>
+            <span class="dropdown-item" id="sortByDateCmd">
+                <i class="menuIcon fa fa-check mx-2"></i>
+                <i class="menuIcon fa fa-calendar mx-2"></i> Photos par date de création
+            </span>
+            <span class="dropdown-item" id="sortByOwnersCmd">
+                <i class="menuIcon fa fa-fw mx-2"></i>
+                <i class="menuIcon fa fa-users mx-2"></i> Photos par créateur
+            </span>
+            <span class="dropdown-item" id="sortByLikesCmd">
+                <i class="menuIcon fa fa-fw mx-2"></i>
+                <i class="menuIcon fa fa-heart mx-2"></i> Photos les plus aimées
+            </span>
+            <span class="dropdown-item" id="ownerOnlyCmd">
+                <i class="menuIcon fa fa-fw mx-2"></i>
+                <i class="menuIcon fa fa-user mx-2"></i> Mes photos
+            </span>
         `;
     }
     else
@@ -228,7 +245,7 @@ async function editProfil(profil) {
 }
 async function createProfil(profil) {
     if (await API.register(profil)) {
-        loginMessage = "Votre compte a été créé. Veuillez prendre vos courriels pour réccupérer votre code de vérification qui vous sera demandé lors de votre prochaine connexion."
+        loginMessage = "Votre compte a été créé. Veuillez prendre vos courriels pour récupérer votre code de vérification qui vous sera demandé lors de votre prochaine connexion."
         renderLoginForm();
     } else {
         renderError("Un problème est survenu.");
@@ -352,9 +369,68 @@ async function renderPhotos() {
         renderLoginForm();
     }
 }
-async function renderPhotosList() {
+async function renderPhotosList(queryString = null) {
     eraseContent();
-    $("#content").append("<h2> En contruction </h2>");
+    $("#content").append(`<div class="photosLayout"></div>`);
+    //"?OwnerId="+loggedUser.Id //Mes photos
+    let loggedUser = await API.retrieveLoggedUser(queryString);
+    let photos = await API.GetPhotos();
+    console.log(photos);
+    for (let p of photos.data) {
+        if (p.Shared || p.OwnerId == loggedUser.Id) {
+            let likesMsg = `
+            <div>0</div>
+            <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
+        `;
+            if (p.likes != null) {
+                let usersLike = "";
+                let iconClass = "fa-regular fa-thumbs-up";
+                for (let l in p.likes) {
+                    usersLike += l + "\n";
+                    if (l == loggedUser.Id) {
+                        iconClass = "fa fa-thumbs-up";
+                    }
+                }
+                likesMsg = `
+                <div>${p.likes.length}</div>
+                <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
+            `;
+            }
+            console.log(p);
+            $(".photosLayout").append(`
+            <div class="photoLayout">
+                <div class="photoTitleContainer">
+                    <h1 class="photoTitle">${p.Title}</h1>
+                </div>
+                <div class="photoImage" style="background-image:url('${p.Image}')">
+                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.OwnerName}"></div>
+                    ${p.Shared ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')"></div>` : ""}
+                </div>
+                <div class="photoCreationDate">
+                    <div>${p.Date}Mercredi le 13 décembre 2023 @ 10:32:30</div>
+                    <div class="likesSummary">${likesMsg}</div>
+                </div>
+            </div>`);
+        }
+    }
+    $(".photosLayout").append(`
+    <div class="photoLayout">
+        <div class="photoTitleContainer">
+            <h1 class="photoTitle">Titre de la photo</h1>
+        </div>
+        <div class="photoImage" style="background-image:url('../assetsRepository/102ed541-9067-11ee-ae77-b3bd8528eca2.jpeg')">
+            <div class="UserAvatarSmall" style="background-image:url('../assetsRepository/102ed541-9067-11ee-ae77-b3bd8528eca2.jpeg')" title="Olivier Morin"></div>
+            <div class="sharedIcon" style="background-image:url('./images/shared.png')"></div>
+        </div>
+        <div class="photoCreationDate">
+            <div>Mercredi le 13 décembre 2023 @ 10:32:30</div>
+            <div class="likesSummary">
+                <div>1</div>
+                <div class="cmdIcon fa fa-thumbs-up" id="unlikePhotoCmd" title="Bob Tremblay\nOlivier Morin"></div>
+            </div>
+        </div>
+    </div>
+    `);
 }
 function renderVerify() {
     eraseContent();
