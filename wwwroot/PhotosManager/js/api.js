@@ -249,7 +249,7 @@ class API {
         API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
-                url: serverHost + photos_API,
+                url: serverHost + "/photos/create",
                 type: 'POST',
                 headers: API.getBearerAuthorizationToken(),
                 contentType: 'application/json',

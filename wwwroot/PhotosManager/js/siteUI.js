@@ -92,7 +92,8 @@ function attachCmd() {
     $('#editProfilMenuCmd').on('click', renderEditProfilForm);
     $('#renderManageUsersMenuCmd').on('click', renderManageUsers);
     $('#editProfilCmd').on('click', renderEditProfilForm);
-    $('#aboutCmd').on("click", renderAbout);
+    $('#aboutCmd').on("click", renderAbout);    
+    $('#newPhotoCmd').on("click", renderCreatePhoto);
     $('.sortItem').on('click', (e) => {
         console.log(e.target);
         console.log($(e));
@@ -297,6 +298,13 @@ async function deleteProfil() {
             logout();
         } else
             renderError("Un problème est survenu.");
+    }
+}
+async function createPhoto(photo) {
+    if (await API.CreatePhoto(photo)) {
+        renderPhotos();
+    } else {
+        renderError("Un problème est survenu.");
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -906,4 +914,81 @@ function getFormData($form) {
     });
     return jsonObject;
 }
+function renderCreatePhoto(missingImgMsg = null, descText = null, titleText = null) {
+    noTimeout();
+    eraseContent();
+    UpdateHeader("Ajout de photos", "createPhoto");
+    $("#newPhotoCmd").hide();
 
+    if (typeof missingImgMsg !== "string"){
+        missingImgMsg = "";
+    }
+    if (typeof descText !== "string"){
+        descText = "";
+    }
+    if (typeof titleText !== "string"){
+        titleText = "";
+    }
+
+    $("#content").append(`
+        <br/>
+        <div class="loginMessage">${missingImgMsg}</div>
+        <form class="form" id="createPhotoForm"'>
+            <fieldset>
+                <legend>Informations</legend>
+                <input  type="text" 
+                        class="form-control Alpha" 
+                        name="Title" 
+                        id="Title"
+                        placeholder="Titre" 
+                        value="${titleText}"
+                        required 
+                        RequireMessage = 'Veuillez entrer le titre de la photo'
+                        InvalidMessage = 'Titre invalide'/>
+                                        
+                <textarea
+                        class="form-control Alpha" 
+                        name="Description" 
+                        id="Description"
+                        placeholder="Description" 
+                        required 
+                        RequireMessage = 'Veuillez ajouter une courte description de la photo'
+                        InvalidMessage = 'Description invalide'>${descText}</textarea>
+
+                <input  type="checkbox" 
+                        name="Shared" 
+                        id="Shared" />
+                <label for="Shared"> Partagée </label> 
+            </fieldset>
+            <fieldset>
+                <legend>Image</legend>
+                <div class='imageUploader' 
+                        newImage='true' 
+                        controlId='Image' 
+                        imageSrc='images/PhotoCloudLogo.png' 
+                        waitingImage="images/Loading_icon.gif">
+            </div>
+            </fieldset>
+   
+            <input type='submit' name='submit' id='saveUser' value="Enregistrer" class="form-control btn-primary">
+        </form>
+        <div class="cancel">
+            <button class="form-control btn-secondary" id="abortCreatePhotoCmd">Annuler</button>
+        </div>
+    `);
+    $('#loginCmd').on('click', renderLoginForm);
+    initFormValidation(); // important do to after all html injection!
+    initImageUploaders();
+    $('#abortCreatePhotoCmd').on('click', renderPhotos);
+    $('#createPhotoForm').on("submit", function (event) {
+        let photo = getFormData($('#createPhotoForm'));
+        if (photo.Image != ""){
+            photo.OwnerId = API.retrieveLoggedUser().Id
+            event.preventDefault();
+            showWaitingGif();
+            createPhoto(photo);
+        }else{
+            renderCreatePhoto("Veuillez sélectionner une image.", photo.Description, photo.Title);
+        }
+    });
+}
