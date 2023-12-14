@@ -307,6 +307,13 @@ async function createPhoto(photo) {
         renderError("Un problème est survenu.");
     }
 }
+async function editPhoto(photo) {
+    if (await API.UpdatePhoto(photo)) {
+        renderPhotos();
+    } else {
+        renderError("Un problème est survenu.");
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Views rendering
 function showWaitingGif() {
@@ -414,6 +421,13 @@ async function renderPhotosList() {
     $("#content").append(`<div class="photosLayout"></div>`);
     let loggedUser = await API.retrieveLoggedUser();
     let photos = await API.GetPhotos(queryString);
+
+    let isLoggedUserAdmin;
+    if (loggedUser.Authorizations["readAccess"] == 2 && loggedUser.Authorizations["writeAccess"] == 2){
+        isLoggedUserAdmin = true;
+    }else{
+        isLoggedUserAdmin = false;
+    }
     for (let p of photos.data) {
         if (p.Shared || p.OwnerId == loggedUser.Id) {
             let likesMsg = `
@@ -438,6 +452,9 @@ async function renderPhotosList() {
             <div class="photoLayout">
                 <div class="photoTitleContainer">
                     <h1 class="photoTitle">${p.Title}</h1>
+                    ${p.OwnerId == loggedUser.Id || isLoggedUserAdmin ? `
+                    <div class="editPhotoCmd cmdIcon fa-solid fa-pencil" title="Modifier les informations de la photo" photoId="${p.Id}"></div>
+                    <div class="deletePhotoCmd cmdIcon fa-solid fa-trash" photoId="${p.Id}" title="Supprimer cette photo"></div> ` : ""}
                 </div>
                 <div class="photoImage" style="background-image:url('${p.Image}')">
                     <input type="hidden" name="photoId" value="${p.Id}">
@@ -452,6 +469,13 @@ async function renderPhotosList() {
         }
     }
     queryString = "";
+    $('.photoImage').on('click', (e) => {
+        renderDetails(e.target.firstElementChild.value);
+    });
+    $('.editPhotoCmd').on('click', (e) => {
+        let photoId = $(e.currentTarget).attr("photoId");
+        renderEditPhoto(photoId);
+    });
     $('.photoImage').on('click', (e) => {
         renderDetails(e.target.firstElementChild.value);
     });
@@ -914,6 +938,78 @@ function getFormData($form) {
     });
     return jsonObject;
 }
+async function renderEditPhoto(photoId) {
+    noTimeout();
+    eraseContent();
+    UpdateHeader("Modification de photo", "editPhoto");
+    let selectedPhoto = await API.GetPhotosById(photoId);
+    $("#newPhotoCmd").hide();
+    $("#content").append(`
+        <br/>
+        <form class="form" id="editPhotoForm"'>
+            <fieldset>
+                <legend>Informations</legend>
+                <input  type="text" 
+                        class="form-control Alpha" 
+                        name="Title" 
+                        id="Title"
+                        placeholder="Titre" 
+                        value="${selectedPhoto.Title}"
+                        required 
+                        RequireMessage = 'Veuillez entrer le titre de la photo'
+                        InvalidMessage = 'Titre invalide'/>
+                                        
+                <textarea
+                        class="form-control Alpha" 
+                        name="Description" 
+                        id="Description"
+                        placeholder="Description" 
+                        required 
+                        RequireMessage = 'Veuillez ajouter une courte description de la photo'
+                        InvalidMessage = 'Description invalide'>${selectedPhoto.Description}</textarea>
+
+                <input  type="checkbox" 
+                        name="Shared" 
+                        id="Shared" 
+                        ${selectedPhoto.Shared ? "checked" : ""}
+                        />
+                <label for="Shared"> Partagée </label> 
+            </fieldset>
+            <fieldset>
+                <legend>Image</legend>
+                <div class='imageUploader' 
+                        newImage='true' 
+                        controlId='Image' 
+                        imageSrc='${selectedPhoto.Image}' 
+                        waitingImage="images/Loading_icon.gif">
+            </div>
+            </fieldset>
+   
+            <input type='submit' name='submit' id='saveUser' value="Enregistrer" class="form-control btn-primary">
+        </form>
+        <div class="cancel">
+            <button class="form-control btn-secondary" id="abortEditPhotoCmd">Annuler</button>
+        </div>
+    `);
+    initFormValidation(); // important do to after all html injection!
+    initImageUploaders();
+    $('#abortEditPhotoCmd').on('click', renderPhotos);
+    $('#editPhotoForm').on("submit", function (event) {
+        let newPhoto = getFormData($('#editPhotoForm'));
+            newPhoto.Id = selectedPhoto.Id;
+            newPhoto.OwnerId = selectedPhoto.Owner.Id;
+            newPhoto.Date = Date.now() / 1000;
+            if (newPhoto.Shared == null){
+                newPhoto.Shared = false;
+            } else {
+                newPhoto.Shared = true;
+            }
+            event.preventDefault();
+            showWaitingGif();
+            editPhoto(newPhoto);
+    });
+}
+
 function renderCreatePhoto(missingImgMsg = null, descText = null, titleText = null) {
     noTimeout();
     eraseContent();
