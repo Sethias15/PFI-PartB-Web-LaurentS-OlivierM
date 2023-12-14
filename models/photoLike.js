@@ -1,7 +1,8 @@
 import Model from './model.js';
+import UserModel from './user.js';
 import Repository from '../models/repository.js';
 
-export default class PhotoLikes extends Model {
+export default class PhotosLike extends Model {
     constructor() {
         super();
         this.addField('UsersId', 'object');
@@ -11,14 +12,12 @@ export default class PhotoLikes extends Model {
         instance = super.bindExtraData(instance);
         let usersRepository = new Repository(new UserModel());
         let users = new Array();
-        let names = new Array();
-        for(let u in instance.UsersId) {
+        for(let u of instance.UsersId) {
             let user = usersRepository.get(u);
             users.push(user);
-            names.push(user.Name);
         }
         instance.Users = users;
-        instance.UsersNames = names;
+        instance.LikeCount = instance.UsersId.length;
         return instance;
     }
 }

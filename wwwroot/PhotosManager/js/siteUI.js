@@ -18,6 +18,8 @@ let HorizontalPhotosCount;
 let VerticalPhotosCount;
 let offset = 0;
 
+var queryString = "";
+
 Init_UI();
 function Init_UI() {
     getViewPortPhotosRanges();
@@ -63,14 +65,43 @@ function installWindowResizeHandler() {
     });
 }
 function attachCmd() {
+    let loggedUser = API.retrieveLoggedUser();
+    
     $('#loginCmd').on('click', renderLoginForm);
     $('#logoutCmd').on('click', logout);
     $('#listPhotosCmd').on('click', renderPhotos);
     $('#listPhotosMenuCmd').on('click', renderPhotos);
+    $('#sortByDateCmd').on('click', () => {
+        queryString = "?sort=date,DESC";
+        renderPhotos();
+    });
+    $('#sortByOwnersCmd').on('click', () => {
+        queryString = "?sort=ownername";
+        renderPhotos();
+    });
+    $('#sortByLikesCmd').on('click', () => {
+        queryString = "?sort=likecount,DESC";
+        renderPhotos();
+    });
+    $('#ownerOnlyCmd').on('click', () => {
+        if (loggedUser != null) {
+            queryString = "?OwnerId=" + loggedUser.Id;
+            renderPhotos();
+        }
+    });
     $('#editProfilMenuCmd').on('click', renderEditProfilForm);
     $('#renderManageUsersMenuCmd').on('click', renderManageUsers);
     $('#editProfilCmd').on('click', renderEditProfilForm);
     $('#aboutCmd').on("click", renderAbout);
+    $('.sortItem').on('click', (e) => {
+        console.log(e.target);
+        console.log($(e));
+        console.log($(e).children());
+        $(".check").addClass("fa-fw");
+        $(".check").removeClass("fa-check");
+        $(e).children(".check").removeClass("fa-fw");
+        $(e).children(".check").addClass("fa-check");
+    });
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Header management
@@ -96,20 +127,20 @@ function loggedUserMenu() {
                 <i class="menuIcon fa fa-image mx-2"></i> Liste des photos
             </span>
             <div class="dropdown-divider"></div>
-            <span class="dropdown-item" id="sortByDateCmd">
-                <i class="menuIcon fa fa-check mx-2"></i>
+            <span class="dropdown-item sortItem" id="sortByDateCmd">
+                <i class="menuIcon fa fa-fw check mx-2"></i>
                 <i class="menuIcon fa fa-calendar mx-2"></i> Photos par date de création
             </span>
-            <span class="dropdown-item" id="sortByOwnersCmd">
-                <i class="menuIcon fa fa-fw mx-2"></i>
+            <span class="dropdown-item sortItem" id="sortByOwnersCmd">
+                <i class="menuIcon fa fa-fw check mx-2"></i>
                 <i class="menuIcon fa fa-users mx-2"></i> Photos par créateur
             </span>
-            <span class="dropdown-item" id="sortByLikesCmd">
-                <i class="menuIcon fa fa-fw mx-2"></i>
+            <span class="dropdown-item sortItem" id="sortByLikesCmd">
+                <i class="menuIcon fa fa-fw check mx-2"></i>
                 <i class="menuIcon fa fa-heart mx-2"></i> Photos les plus aimées
             </span>
-            <span class="dropdown-item" id="ownerOnlyCmd">
-                <i class="menuIcon fa fa-fw mx-2"></i>
+            <span class="dropdown-item sortItem" id="ownerOnlyCmd">
+                <i class="menuIcon fa fa-fw check mx-2"></i>
                 <i class="menuIcon fa fa-user mx-2"></i> Mes photos
             </span>
         `;
@@ -369,68 +400,111 @@ async function renderPhotos() {
         renderLoginForm();
     }
 }
-async function renderPhotosList(queryString = null) {
+async function renderPhotosList() {
     eraseContent();
+    console.log(queryString);
     $("#content").append(`<div class="photosLayout"></div>`);
-    //"?OwnerId="+loggedUser.Id //Mes photos
-    let loggedUser = await API.retrieveLoggedUser(queryString);
-    let photos = await API.GetPhotos();
-    console.log(photos);
+    let loggedUser = await API.retrieveLoggedUser();
+    let photos = await API.GetPhotos(queryString);
     for (let p of photos.data) {
         if (p.Shared || p.OwnerId == loggedUser.Id) {
             let likesMsg = `
-            <div>0</div>
-            <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
-        `;
-            if (p.likes != null) {
+                <div>0</div>
+                <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
+            `;
+            if (p.Likes != null) {
                 let usersLike = "";
                 let iconClass = "fa-regular fa-thumbs-up";
-                for (let l in p.likes) {
-                    usersLike += l + "\n";
-                    if (l == loggedUser.Id) {
+                for (let l of p.Likes.Users) {
+                    usersLike += l.Name + "\n";
+                    if (l.Id == loggedUser.Id) {
                         iconClass = "fa fa-thumbs-up";
                     }
                 }
                 likesMsg = `
-                <div>${p.likes.length}</div>
-                <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
-            `;
+                    <div>${p.Likecount}</div>
+                    <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
+                `;
             }
-            console.log(p);
             $(".photosLayout").append(`
             <div class="photoLayout">
                 <div class="photoTitleContainer">
                     <h1 class="photoTitle">${p.Title}</h1>
                 </div>
                 <div class="photoImage" style="background-image:url('${p.Image}')">
+                    <input type="hidden" name="photoId" value="${p.Id}">
                     <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.OwnerName}"></div>
-                    ${p.Shared ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')"></div>` : ""}
+                    ${p.Shared && p.OwnerId == loggedUser.Id ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')" title="Partagé"></div>` : ""}
                 </div>
                 <div class="photoCreationDate">
-                    <div>${p.Date}Mercredi le 13 décembre 2023 @ 10:32:30</div>
+                    <div>${formatDate(p.Date)}</div>
                     <div class="likesSummary">${likesMsg}</div>
                 </div>
             </div>`);
         }
     }
-    $(".photosLayout").append(`
-    <div class="photoLayout">
-        <div class="photoTitleContainer">
-            <h1 class="photoTitle">Titre de la photo</h1>
-        </div>
-        <div class="photoImage" style="background-image:url('../assetsRepository/102ed541-9067-11ee-ae77-b3bd8528eca2.jpeg')">
-            <div class="UserAvatarSmall" style="background-image:url('../assetsRepository/102ed541-9067-11ee-ae77-b3bd8528eca2.jpeg')" title="Olivier Morin"></div>
-            <div class="sharedIcon" style="background-image:url('./images/shared.png')"></div>
-        </div>
-        <div class="photoCreationDate">
-            <div>Mercredi le 13 décembre 2023 @ 10:32:30</div>
-            <div class="likesSummary">
-                <div>1</div>
-                <div class="cmdIcon fa fa-thumbs-up" id="unlikePhotoCmd" title="Bob Tremblay\nOlivier Morin"></div>
-            </div>
-        </div>
-    </div>
-    `);
+    queryString = "";
+    $('.photoImage').on('click', (e) => {
+        renderDetails(e.target.firstElementChild.value);
+    });
+}
+function formatDate(time) {
+    let date = new Date(time * 1000);
+
+    const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+    const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
+    return `${days[date.getDay()]} le ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} @ 
+        ${formatTime(date.getHours())}:${formatTime(date.getMinutes())}:${formatTime(date.getSeconds())}`
+}
+function formatTime(time) {
+    return time < 10 ? "0" + time : time;
+}
+async function renderDetails(id) {
+    eraseContent();
+    let loggedUser = await API.retrieveLoggedUser();
+    let p = await API.GetPhotosById(id);
+    if (p != null) {
+        console.log(p);
+        if (p.Shared || p.OwnerId == loggedUser.Id) {
+            let likesMsg = `
+                <div>0</div>
+                <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
+            `;
+            if (p.Likes != null) {
+                let usersLike = "";
+                let iconClass = "fa-regular fa-thumbs-up";
+                for (let l of p.Likes.Users) {
+                    usersLike += l.Name + "\n";
+                    if (l.Id == loggedUser.Id) {
+                        iconClass = "fa fa-thumbs-up";
+                    }
+                }
+                likesMsg = `
+                    <div>${p.Likes.Users.length}</div>
+                    <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
+                `;
+            }
+            $("#content").append(`
+            <div class="photoLayout">
+                <div class="photoTitleContainer">
+                    <h1 class="photoDetailsTitle">${p.Title}</h1>
+                </div>
+                <div class="photoDetailsLargeImage" style="background-image:url('${p.Image}')">
+                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.OwnerName}"></div>
+                    ${p.Shared && p.OwnerId == loggedUser.Id ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')" title="Partagé"></div>` : ""}
+                </div>
+                <div class="photoDetailsCreationDate">
+                    <div>${formatDate(p.Date)}</div>
+                    <div class="likesSummary">${likesMsg}</div>
+                </div>
+                <div class="photoDetailsDescription">
+                    <div>${p.Description}</div>
+                </div>
+            </div>`);
+        }
+    }
+    queryString = "";
 }
 function renderVerify() {
     eraseContent();
