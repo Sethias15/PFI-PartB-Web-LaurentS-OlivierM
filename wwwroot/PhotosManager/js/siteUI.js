@@ -314,6 +314,13 @@ async function editPhoto(photo) {
         renderError("Un problème est survenu.");
     }
 }
+async function deletePhoto(photoId) {
+    if (await API.DeletePhoto(photoId)) {
+        renderPhotos();
+    } else {
+        renderError("Un problème est survenu.");
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Views rendering
 function showWaitingGif() {
@@ -476,8 +483,9 @@ async function renderPhotosList() {
         let photoId = $(e.currentTarget).attr("photoId");
         renderEditPhoto(photoId);
     });
-    $('.photoImage').on('click', (e) => {
-        renderDetails(e.target.firstElementChild.value);
+    $('.deletePhotoCmd').on('click', (e) => {
+        let photoId = $(e.currentTarget).attr("photoId");
+        renderDeletePhoto(photoId);
     });
 }
 function formatDate(time) {
@@ -1087,4 +1095,43 @@ function renderCreatePhoto(missingImgMsg = null, descText = null, titleText = nu
             renderCreatePhoto("Veuillez sélectionner une image.", photo.Description, photo.Title);
         }
     });
+}
+async function renderDeletePhoto(photoId) {
+    timeout();
+    let loggedUser = API.retrieveLoggedUser();
+    if (loggedUser) {
+        let photoToDelete = (await API.GetPhotosById(photoId));
+        if (!API.error) {
+            eraseContent();
+            UpdateHeader("Retrait de photo", "confirmDeletePhoto");
+            $("#newPhotoCmd").hide();
+            $("#content").append(`
+                <div class="content loginForm">
+                    <br>
+                    <div class="form UserRow">
+                        <h4> Voulez-vous vraiment effacer cette photo?</h4>
+
+                        <div class="photoLayout">
+                            <div class="photoTitleContainer">
+                                <h1 class="photoTitle">${photoToDelete.Title}</h1>
+                            </div>
+                        <div class="photoImage" style="background-image:url('${photoToDelete.Image}')">
+                            <input type="hidden" name="photoId" value="${photoToDelete.Id}">
+                        </div>
+                    </div>        
+                    <div class="form">
+                        <button class="form-control btn-danger" id="deletePhotoCmd">Effacer</button>
+                        <br>
+                        <button class="form-control btn-secondary" id="abortDeletePhotoCmd">Annuler</button>
+                    </div>
+                </div>
+            `);
+            $("#deletePhotoCmd").on("click", function () {
+                deletePhoto(photoToDelete.Id);
+            });
+            $("#abortDeletePhotoCmd").on("click", renderPhotos);
+        } else {
+            renderError("Une erreur est survenue");
+        }
+    }
 }
