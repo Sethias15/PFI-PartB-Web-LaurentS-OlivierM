@@ -35,7 +35,15 @@
 .photoTitleContainer {
     height: 40px;
     display:grid;
-    grid-template-columns: 308px 25px 25px;
+    grid-template-columns: 300px 30px 30px;
+    align-items: center;
+    cursor:default;
+}
+
+.photoDetailsTitleContainer {
+    height: 40px;
+    display:grid;
+    grid-template-columns: 600px 30px 30px;
     align-items: center;
     cursor:default;
 }

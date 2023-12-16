@@ -11,7 +11,8 @@
         "Id": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca3",
         "UsersId": [
             "102ed540-9067-11ee-ae77-b3bd8528eca2",
-            "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2"
+            "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
         ]
     },
     {
@@ -19,30 +20,27 @@
         "UsersId": [
             "102ed540-9067-11ee-ae77-b3bd8528eca2",
             "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
-            "e40c59f0-9067-11ee-ae77-b3bd8528eca2",
-            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+            "e40c59f0-9067-11ee-ae77-b3bd8528eca2"
         ]
-    }
-    ,
+    },
     {
         "Id": "102ed540-9067-11ee-ae77-b3bd8528eca5",
         "UsersId": [
-            "102ed540-9067-11ee-ae77-b3bd8528eca2",
-            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+            "102ed540-9067-11ee-ae77-b3bd8528eca2"
         ]
     },
     {
         "Id": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca4",
         "UsersId": [
             "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
-            "e40c59f0-9067-11ee-ae77-b3bd8528eca2",
-            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+            "e40c59f0-9067-11ee-ae77-b3bd8528eca2"
         ]
     },
     {
         "Id": "102ed540-9067-11ee-ae77-b3bd8528eca6",
         "UsersId": [
-            "102ed540-9067-11ee-ae77-b3bd8528eca2"
+            "102ed540-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
         ]
     }
 ]

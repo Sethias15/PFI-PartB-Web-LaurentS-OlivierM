@@ -5,7 +5,7 @@
 
 const serverHost = "http://localhost:5000";
 const photos_API = "/api/photos";
-const photoLikes_API = "/api/photolikes";
+const photoLikes_API = "/api/photoslikes";
 class API {
     static initHttpState() {
         this.currentHttpError = "";
@@ -280,6 +280,20 @@ class API {
                 url: serverHost + photos_API + "/" + id,
                 type: 'DELETE',
                 headers: API.getBearerAuthorizationToken(),
+                success: () => { resolve(true) },
+                error: xhr => { API.setHttpErrorState(xhr); resolve(false); }
+            });
+        });
+    }
+    static LikePhoto(data) {
+        API.initHttpState();
+        return new Promise(resolve => {
+            $.ajax({
+                url: serverHost + photoLikes_API + "/" + data.Id,
+                type: 'PUT',
+                headers: API.getBearerAuthorizationToken(),
+                contentType: 'application/json',
+                data: JSON.stringify(data),
                 success: () => { resolve(true) },
                 error: xhr => { API.setHttpErrorState(xhr); resolve(false); }
             });

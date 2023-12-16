@@ -66,7 +66,7 @@ function installWindowResizeHandler() {
 }
 function attachCmd() {
     let loggedUser = API.retrieveLoggedUser();
-    
+
     $('#loginCmd').on('click', renderLoginForm);
     $('#logoutCmd').on('click', logout);
     $('#listPhotosCmd').on('click', renderPhotos);
@@ -92,16 +92,14 @@ function attachCmd() {
     $('#editProfilMenuCmd').on('click', renderEditProfilForm);
     $('#renderManageUsersMenuCmd').on('click', renderManageUsers);
     $('#editProfilCmd').on('click', renderEditProfilForm);
-    $('#aboutCmd').on("click", renderAbout);    
+    $('#aboutCmd').on("click", renderAbout);
     $('#newPhotoCmd').on("click", renderCreatePhoto);
     $('.sortItem').on('click', (e) => {
-        console.log(e.target);
-        console.log($(e));
-        console.log($(e).children());
+        console.log($('#ownerOnlyCmd').children(".check"));
+        console.log($(e.target).children(".check"));
         $(".check").addClass("fa-fw");
         $(".check").removeClass("fa-check");
-        $(e).children(".check").removeClass("fa-fw");
-        $(e).children(".check").addClass("fa-check");
+        $(e.target).children(".check").toggleClass("fa-fw fa-check")
     });
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -424,21 +422,19 @@ async function renderPhotos() {
 }
 async function renderPhotosList() {
     eraseContent();
-    console.log(queryString);
     $("#content").append(`<div class="photosLayout"></div>`);
     let loggedUser = await API.retrieveLoggedUser();
     let photos = await API.GetPhotos(queryString);
-
     let isLoggedUserAdmin;
-    if (loggedUser.Authorizations["readAccess"] == 2 && loggedUser.Authorizations["writeAccess"] == 2){
+    if (loggedUser.Authorizations["readAccess"] == 2 && loggedUser.Authorizations["writeAccess"] == 2) {
         isLoggedUserAdmin = true;
-    }else{
+    } else {
         isLoggedUserAdmin = false;
     }
     for (let p of photos.data) {
         if (p.Shared || p.OwnerId == loggedUser.Id) {
             let likesMsg = `
-                <div>0</div>
+                <div class="likeCount">0</div>
                 <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
             `;
             if (p.Likes != null) {
@@ -451,7 +447,7 @@ async function renderPhotosList() {
                     }
                 }
                 likesMsg = `
-                    <div>${p.Likecount}</div>
+                    <div class="likeCount">${p.Likecount}</div>
                     <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
                 `;
             }
@@ -464,20 +460,24 @@ async function renderPhotosList() {
                     <div class="deletePhotoCmd cmdIcon fa-solid fa-trash" photoId="${p.Id}" title="Supprimer cette photo"></div> ` : ""}
                 </div>
                 <div class="photoImage" style="background-image:url('${p.Image}')">
-                    <input type="hidden" name="photoId" value="${p.Id}">
-                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.OwnerName}"></div>
+                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.Ownername}"></div>
                     ${p.Shared && p.OwnerId == loggedUser.Id ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')" title="Partagé"></div>` : ""}
                 </div>
                 <div class="photoCreationDate">
                     <div>${formatDate(p.Date)}</div>
                     <div class="likesSummary">${likesMsg}</div>
                 </div>
+                <input type="hidden" name="photoId" value="${p.Id}">
             </div>`);
         }
     }
     queryString = "";
     $('.photoImage').on('click', (e) => {
-        renderDetails(e.target.firstElementChild.value);
+        renderDetails(e.target.closest(".photoLayout").querySelector(`[name="photoId"]`).value);
+    });
+    $('.fa-thumbs-up').on('click', (e) => {
+        $(e.target).toggleClass("fa fa-regular");
+        handleUserLike(e);
     });
     $('.editPhotoCmd').on('click', (e) => {
         let photoId = $(e.currentTarget).attr("photoId");
@@ -500,12 +500,38 @@ function formatDate(time) {
 function formatTime(time) {
     return time < 10 ? "0" + time : time;
 }
+async function handleUserLike(e) {
+    let id = e.target.closest(".photoLayout").querySelector(`[name="photoId"]`).value;
+    let divLikeCount = e.target.closest(".likesSummary").querySelector(".likeCount");
+    let p = await API.GetPhotosById(id);
+    let loggedUser = await API.retrieveLoggedUser();
+    if (p != null && loggedUser != null) {
+        let likes = (({ Id, UsersId }) => ({ Id, UsersId }))(p.Likes);
+        //console.log(likes);
+        let index = likes.UsersId.indexOf(loggedUser.Id);
+        if (index > -1) {
+            likes.UsersId.splice(index, 1);
+        } else {
+            likes.UsersId.push(loggedUser.Id);
+        }
+        divLikeCount.innerHTML = likes.UsersId.length;
+        API.LikePhoto(likes);
+    }
+}
+function hasUserLiked() {
+
+}
 async function renderDetails(id) {
     eraseContent();
     let loggedUser = await API.retrieveLoggedUser();
     let p = await API.GetPhotosById(id);
+    let isLoggedUserAdmin;
+    if (loggedUser.Authorizations["readAccess"] == 2 && loggedUser.Authorizations["writeAccess"] == 2) {
+        isLoggedUserAdmin = true;
+    } else {
+        isLoggedUserAdmin = false;
+    }
     if (p != null) {
-        console.log(p);
         if (p.Shared || p.OwnerId == loggedUser.Id) {
             let likesMsg = `
                 <div>0</div>
@@ -527,11 +553,14 @@ async function renderDetails(id) {
             }
             $("#content").append(`
             <div class="photoLayout">
-                <div class="photoTitleContainer">
+                <div class="photoDetailsTitleContainer">
                     <h1 class="photoDetailsTitle">${p.Title}</h1>
+                    ${p.OwnerId == loggedUser.Id || isLoggedUserAdmin ? `
+                    <div class="editPhotoCmd cmdIcon fa-solid fa-pencil" title="Modifier les informations de la photo" photoId="${p.Id}"></div>
+                    <div class="deletePhotoCmd cmdIcon fa-solid fa-trash" photoId="${p.Id}" title="Supprimer cette photo"></div> ` : ""}
                 </div>
                 <div class="photoDetailsLargeImage" style="background-image:url('${p.Image}')">
-                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.OwnerName}"></div>
+                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.Ownername}"></div>
                     ${p.Shared && p.OwnerId == loggedUser.Id ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')" title="Partagé"></div>` : ""}
                 </div>
                 <div class="photoDetailsCreationDate">
@@ -545,6 +574,19 @@ async function renderDetails(id) {
         }
     }
     queryString = "";
+
+    $('.fa-thumbs-up').on('click', (e) => {
+        $(e.target).toggleClass("fa fa-regular");
+        handleUserLike(e);
+    });
+    $('.editPhotoCmd').on('click', (e) => {
+        let photoId = $(e.currentTarget).attr("photoId");
+        renderEditPhoto(photoId);
+    });
+    $('.deletePhotoCmd').on('click', (e) => {
+        let photoId = $(e.currentTarget).attr("photoId");
+        renderDeletePhoto(photoId);
+    });
 }
 function renderVerify() {
     eraseContent();
@@ -1004,17 +1046,17 @@ async function renderEditPhoto(photoId) {
     $('#abortEditPhotoCmd').on('click', renderPhotos);
     $('#editPhotoForm').on("submit", function (event) {
         let newPhoto = getFormData($('#editPhotoForm'));
-            newPhoto.Id = selectedPhoto.Id;
-            newPhoto.OwnerId = selectedPhoto.Owner.Id;
-            newPhoto.Date = Date.now() / 1000;
-            if (newPhoto.Shared == null){
-                newPhoto.Shared = false;
-            } else {
-                newPhoto.Shared = true;
-            }
-            event.preventDefault();
-            showWaitingGif();
-            editPhoto(newPhoto);
+        newPhoto.Id = selectedPhoto.Id;
+        newPhoto.OwnerId = selectedPhoto.Owner.Id;
+        newPhoto.Date = Date.now() / 1000;
+        if (newPhoto.Shared == null) {
+            newPhoto.Shared = false;
+        } else {
+            newPhoto.Shared = true;
+        }
+        event.preventDefault();
+        showWaitingGif();
+        editPhoto(newPhoto);
     });
 }
 
@@ -1024,13 +1066,13 @@ function renderCreatePhoto(missingImgMsg = null, descText = null, titleText = nu
     UpdateHeader("Ajout de photos", "createPhoto");
     $("#newPhotoCmd").hide();
 
-    if (typeof missingImgMsg !== "string"){
+    if (typeof missingImgMsg !== "string") {
         missingImgMsg = "";
     }
-    if (typeof descText !== "string"){
+    if (typeof descText !== "string") {
         descText = "";
     }
-    if (typeof titleText !== "string"){
+    if (typeof titleText !== "string") {
         titleText = "";
     }
 
@@ -1086,12 +1128,12 @@ function renderCreatePhoto(missingImgMsg = null, descText = null, titleText = nu
     $('#abortCreatePhotoCmd').on('click', renderPhotos);
     $('#createPhotoForm').on("submit", function (event) {
         let photo = getFormData($('#createPhotoForm'));
-        if (photo.Image != ""){
+        if (photo.Image != "") {
             photo.OwnerId = API.retrieveLoggedUser().Id
             event.preventDefault();
             showWaitingGif();
             createPhoto(photo);
-        }else{
+        } else {
             renderCreatePhoto("Veuillez sélectionner une image.", photo.Description, photo.Title);
         }
     });
