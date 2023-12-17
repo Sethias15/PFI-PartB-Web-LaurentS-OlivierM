@@ -27,7 +27,7 @@ export default class Photo extends Model {
             users.push(user);
         }
         instance.UsersLikes = users;
-        instance.LikeCount = instance.Likes.length;
+        instance.Likecount = instance.Likes.length;
         return instance;
     }
 }

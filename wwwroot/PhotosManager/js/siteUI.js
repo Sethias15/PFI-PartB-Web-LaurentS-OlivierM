@@ -19,6 +19,7 @@ let VerticalPhotosCount;
 let offset = 0;
 
 var queryString = "";
+var checkedOption = "";
 
 Init_UI();
 function Init_UI() {
@@ -70,22 +71,30 @@ function attachCmd() {
     $('#loginCmd').on('click', renderLoginForm);
     $('#logoutCmd').on('click', logout);
     $('#listPhotosCmd').on('click', renderPhotos);
-    $('#listPhotosMenuCmd').on('click', renderPhotos);
+    $('#listPhotosMenuCmd').on('click', () => {
+        queryString = "";
+        checkedOption = "";
+        renderPhotos();
+    });
     $('#sortByDateCmd').on('click', () => {
         queryString = "?sort=date,DESC";
+        checkedOption = "sortByDateCmd";
         renderPhotos();
     });
     $('#sortByOwnersCmd').on('click', () => {
         queryString = "?sort=ownername";
+        checkedOption = "sortByOwnersCmd";
         renderPhotos();
     });
     $('#sortByLikesCmd').on('click', () => {
         queryString = "?sort=likecount,DESC";
+        checkedOption = "sortByLikesCmd";
         renderPhotos();
     });
     $('#ownerOnlyCmd').on('click', () => {
         if (loggedUser != null) {
             queryString = "?OwnerId=" + loggedUser.Id;
+            checkedOption = "ownerOnlyCmd";
             renderPhotos();
         }
     });
@@ -94,13 +103,6 @@ function attachCmd() {
     $('#editProfilCmd').on('click', renderEditProfilForm);
     $('#aboutCmd').on("click", renderAbout);
     $('#newPhotoCmd').on("click", renderCreatePhoto);
-    $('.sortItem').on('click', (e) => {
-        console.log($('#ownerOnlyCmd').children(".check"));
-        console.log($(e.target).children(".check"));
-        $(".check").addClass("fa-fw");
-        $(".check").removeClass("fa-check");
-        $(e.target).children(".check").toggleClass("fa-fw fa-check")
-    });
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Header management
@@ -125,23 +127,6 @@ function loggedUserMenu() {
             <span class="dropdown-item" id="listPhotosMenuCmd">
                 <i class="menuIcon fa fa-image mx-2"></i> Liste des photos
             </span>
-            <div class="dropdown-divider"></div>
-            <span class="dropdown-item sortItem" id="sortByDateCmd">
-                <i class="menuIcon fa fa-fw check mx-2"></i>
-                <i class="menuIcon fa fa-calendar mx-2"></i> Photos par date de création
-            </span>
-            <span class="dropdown-item sortItem" id="sortByOwnersCmd">
-                <i class="menuIcon fa fa-fw check mx-2"></i>
-                <i class="menuIcon fa fa-users mx-2"></i> Photos par créateur
-            </span>
-            <span class="dropdown-item sortItem" id="sortByLikesCmd">
-                <i class="menuIcon fa fa-fw check mx-2"></i>
-                <i class="menuIcon fa fa-heart mx-2"></i> Photos les plus aimées
-            </span>
-            <span class="dropdown-item sortItem" id="ownerOnlyCmd">
-                <i class="menuIcon fa fa-fw check mx-2"></i>
-                <i class="menuIcon fa fa-user mx-2"></i> Mes photos
-            </span>
         `;
     }
     else
@@ -152,8 +137,25 @@ function loggedUserMenu() {
 }
 function viewMenu(viewName) {
     if (viewName == "photosList") {
-        // todo
-        return "";
+        return `
+            <div class="dropdown-divider"></div>
+            <span class="dropdown-item sortItem" id="sortByDateCmd">
+                <i class="menuIcon fa `+ (checkedOption == "sortByDateCmd" ? "fa-check" : "fa-fw") + ` check mx-2"></i>
+                <i class="menuIcon fa fa-calendar mx-2"></i> Photos par date de création
+            </span>
+            <span class="dropdown-item sortItem" id="sortByOwnersCmd">
+                <i class="menuIcon fa `+ (checkedOption == "sortByOwnersCmd" ? "fa-check" : "fa-fw") + ` check mx-2"></i>
+                <i class="menuIcon fa fa-users mx-2"></i> Photos par créateur
+            </span>
+            <span class="dropdown-item sortItem" id="sortByLikesCmd">
+                <i class="menuIcon fa `+ (checkedOption == "sortByLikesCmd" ? "fa-check" : "fa-fw") + ` check mx-2"></i>
+                <i class="menuIcon fa fa-heart mx-2"></i> Photos les plus aimées
+            </span>
+            <span class="dropdown-item sortItem" id="ownerOnlyCmd">
+                <i class="menuIcon fa `+ (checkedOption == "ownerOnlyCmd" ? "fa-check" : "fa-fw") + ` check mx-2"></i>
+                <i class="menuIcon fa fa-user mx-2"></i> Mes photos
+            </span>
+        `;
     }
     else
         return "";
@@ -432,6 +434,7 @@ async function renderPhotosList() {
         isLoggedUserAdmin = false;
     }
     for (let p of photos.data) {
+        console.log(p);
         if (p.Shared || p.OwnerId == loggedUser.Id) {
             let likesMsg = `
                 <div class="likeCount">0</div>
@@ -447,7 +450,7 @@ async function renderPhotosList() {
                     }
                 }
                 likesMsg = `
-                    <div class="likeCount">${p.LikeCount}</div>
+                    <div class="likeCount">${p.Likecount}</div>
                     <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
                 `;
             }
@@ -515,7 +518,6 @@ async function handleUserLike(e) {
             updatedPhoto.Likes.push(loggedUser.Id);
         }
         updatedPhoto.Image = updatedPhoto.Image.split("assetsRepository/")[1];
-        console.log(updatedPhoto);
         divLikeCount.innerHTML = updatedPhoto.Likes.length;
         API.UpdatePhoto(updatedPhoto);
     }
@@ -539,14 +541,14 @@ async function renderDetails(id) {
             if (p.Likes != null) {
                 let usersLike = "";
                 let iconClass = "fa-regular fa-thumbs-up";
-                for (let l of p.Likes.Users) {
+                for (let l of p.UsersLikes) {
                     usersLike += l.Name + "\n";
                     if (l.Id == loggedUser.Id) {
                         iconClass = "fa fa-thumbs-up";
                     }
                 }
                 likesMsg = `
-                    <div>${p.Likes.Users.length}</div>
+                    <div class="likeCount">${p.Likecount}</div>
                     <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
                 `;
             }
@@ -569,6 +571,7 @@ async function renderDetails(id) {
                 <div class="photoDetailsDescription">
                     <div>${p.Description}</div>
                 </div>
+                <input type="hidden" name="photoId" value="${p.Id}">
             </div>`);
         }
     }

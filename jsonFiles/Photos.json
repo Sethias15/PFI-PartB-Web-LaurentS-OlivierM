@@ -10,7 +10,8 @@
         "Likes": [
             "102ed540-9067-11ee-ae77-b3bd8528eca2",
             "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
-            "e40c59f0-9067-11ee-ae77-b3bd8528eca2"
+            "e40c59f0-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
         ]
     },
     {
@@ -103,12 +104,14 @@
     },
     {
         "Id": "161c41b0-9c63-11ee-a01e-3ff08dbff8ed",
+        "OwnerId": "494fee50-99cb-11ee-a376-a1ed6063adaa",
         "Title": "Des boules de Noël",
         "Description": "Ah que les boules de Noël sont brillantes dans un sapin en couleur!",
-        "Shared": true,
         "Image": "d1fedbe0-9c63-11ee-893c-39cd41e77c4c.jpeg",
-        "OwnerId": "494fee50-99cb-11ee-a376-a1ed6063adaa",
-        "Likes": [],
-        "Date": 1702766303
+        "Date": 1702766303,
+        "Shared": true,
+        "Likes": [
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+        ]
     }
 ]
