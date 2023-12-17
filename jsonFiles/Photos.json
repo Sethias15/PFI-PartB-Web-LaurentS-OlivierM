@@ -113,5 +113,17 @@
         "Likes": [
             "494fee50-99cb-11ee-a376-a1ed6063adaa"
         ]
+    },
+    {
+        "Id": "2be890c0-9c81-11ee-b075-63994377b586",
+        "OwnerId": "494fee50-99cb-11ee-a376-a1ed6063adaa",
+        "Title": "Monsieur Neige",
+        "Description": "Un bonhomme de neige qui porte un chapeau et une écharpe jaune",
+        "Image": "46f050a0-9c82-11ee-b075-63994377b586.jpeg",
+        "Date": 1702779384,
+        "Shared": false,
+        "Likes": [
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+        ]
     }
 ]

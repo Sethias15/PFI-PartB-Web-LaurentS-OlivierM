@@ -433,8 +433,11 @@ async function renderPhotosList() {
     } else {
         isLoggedUserAdmin = false;
     }
+    if(photos == null) {
+        renderError();
+        return;
+    }
     for (let p of photos.data) {
-        console.log(p);
         if (p.Shared || p.OwnerId == loggedUser.Id) {
             let likesMsg = `
                 <div class="likeCount">0</div>
@@ -984,7 +987,6 @@ function renderLoginForm() {
 function getFormData($form) {
     const removeTag = new RegExp("(<[a-zA-Z0-9]+>)|(</[a-zA-Z0-9]+>)", "g");
     var jsonObject = {};
-    console.log($form.serializeArray());
     $.each($form.serializeArray(), (index, control) => {
         jsonObject[control.name] = control.value.replace(removeTag, "");
     });

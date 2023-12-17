@@ -35,7 +35,7 @@
 .photoTitleContainer {
     height: 40px;
     display:grid;
-    grid-template-columns: 300px 30px 30px;
+    grid-template-columns: auto 30px 30px;
     align-items: center;
     cursor:default;
 }
@@ -43,7 +43,7 @@
 .photoDetailsTitleContainer {
     height: 40px;
     display:grid;
-    grid-template-columns: 600px 30px 30px;
+    grid-template-columns: auto 30px 30px;
     align-items: center;
     cursor:default;
 }
@@ -96,6 +96,8 @@
     align-items: center;
 }
 .photoDetailsLargeImage {
+    display: flex;
+    gap: 5px;
     width:100%;
     background-size: cover;
     background-position: center;
