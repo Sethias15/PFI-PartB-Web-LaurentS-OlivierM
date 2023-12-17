@@ -285,20 +285,6 @@ class API {
             });
         });
     }
-    static LikePhoto(data) {
-        API.initHttpState();
-        return new Promise(resolve => {
-            $.ajax({
-                url: serverHost + photoLikes_API + "/" + data.Id,
-                type: 'PUT',
-                headers: API.getBearerAuthorizationToken(),
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: () => { resolve(true) },
-                error: xhr => { API.setHttpErrorState(xhr); resolve(false); }
-            });
-        });
-    }
 }
 
 

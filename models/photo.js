@@ -1,6 +1,5 @@
 import Model from './model.js';
 import UserModel from './user.js';
-import PhotoLikeModel from './photoLike.js';
 import Repository from '../models/repository.js';
 
 export default class Photo extends Model {
@@ -12,6 +11,7 @@ export default class Photo extends Model {
         this.addField('Image', 'asset');
         this.addField('Date', 'integer');
         this.addField('Shared', 'boolean');
+        this.addField('Likes', 'object');
 
         this.setKey("Title");
     }
@@ -19,12 +19,15 @@ export default class Photo extends Model {
     bindExtraData(instance) {
         instance = super.bindExtraData(instance);
         let usersRepository = new Repository(new UserModel());
-        let likesRepository = new Repository(new PhotoLikeModel());
         instance.Owner = usersRepository.get(instance.OwnerId);
         instance.Ownername = instance.Owner.Name;
-        instance.Likes = likesRepository.get(instance.Id);
-        if (instance.Likes != null)
-            instance.Likecount = instance.Likes.LikeCount;
+        let users = new Array();
+        for (let u of instance.Likes) {
+            let user = usersRepository.get(u);
+            users.push(user);
+        }
+        instance.UsersLikes = users;
+        instance.LikeCount = instance.Likes.length;
         return instance;
     }
 }

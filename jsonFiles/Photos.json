@@ -6,7 +6,12 @@
         "Description": "Une soirée au festival de mongolfières",
         "Image": "102ed541-9067-11ee-ae77-b3bd8528eca3.jpeg",
         "Date": 1702516225,
-        "Shared": true
+        "Shared": true,
+        "Likes": [
+            "102ed540-9067-11ee-ae77-b3bd8528eca2",
+            "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
+            "e40c59f0-9067-11ee-ae77-b3bd8528eca2"
+        ]
     },
     {
         "Id": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca3",
@@ -15,7 +20,12 @@
         "Description": "Une randonnée dans une forêt de l'ouest",
         "Image": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca3.jpeg",
         "Date": 1702127218,
-        "Shared": true
+        "Shared": true,
+        "Likes": [
+            "102ed540-9067-11ee-ae77-b3bd8528eca2",
+            "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+        ]
     },
     {
         "Id": "102ed540-9067-11ee-ae77-b3bd8528eca4",
@@ -24,7 +34,12 @@
         "Description": "Une visite au lac",
         "Image": "102ed540-9067-11ee-ae77-b3bd8528eca4.jpeg",
         "Date": 1702146452,
-        "Shared": false
+        "Shared": false,
+        "Likes": [
+            "102ed540-9067-11ee-ae77-b3bd8528eca2",
+            "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
+            "e40c59f0-9067-11ee-ae77-b3bd8528eca2"
+        ]
     },
     {
         "Id": "102ed540-9067-11ee-ae77-b3bd8528eca5",
@@ -33,7 +48,11 @@
         "Description": "Une magnifique vue du Mont Fuji pendant une visite du Japon.",
         "Image": "102ed541-9067-11ee-ae77-b3bd8528eca5.jpeg",
         "Date": 1702520741,
-        "Shared": true
+        "Shared": true,
+        "Likes": [
+            "102ed540-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+        ]
     },
     {
         "Id": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca4",
@@ -42,7 +61,12 @@
         "Description": "Une forêt hivernale dans le nord Québécois",
         "Image": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca4.jpeg",
         "Date": 1702513057,
-        "Shared": true
+        "Shared": true,
+        "Likes": [
+            "b3a0b8b0-9067-11ee-ae77-b3bd8528eca2",
+            "e40c59f0-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+        ]
     },
     {
         "Id": "102ed540-9067-11ee-ae77-b3bd8528eca6",
@@ -51,7 +75,11 @@
         "Description": "Deux husky de Sibérie dans une forêt",
         "Image": "102ed540-9067-11ee-ae77-b3bd8528eca6.jpeg",
         "Date": 1702236514,
-        "Shared": true
+        "Shared": true,
+        "Likes": [
+            "102ed540-9067-11ee-ae77-b3bd8528eca2",
+            "494fee50-99cb-11ee-a376-a1ed6063adaa"
+        ]
     },
     {
         "Id": "102ed540-9067-11ee-ae77-b3bd8528eca7",
@@ -60,7 +88,8 @@
         "Description": "Deux traineaux tirés par des chiens dans le nord du Québec",
         "Image": "102ed540-9067-11ee-ae77-b3bd8528eca7.jpeg",
         "Date": 1702236926,
-        "Shared": false
+        "Shared": false,
+        "Likes": []
     },
     {
         "Id": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca5",
@@ -69,6 +98,17 @@
         "Description": "Une vue aérienne du Château Frontenac À Québec",
         "Image": "b3a0b8b0-9067-11ee-ae77-b3bd8528eca5.jpeg",
         "Date": 1702225184,
-        "Shared": false
+        "Shared": false,
+        "Likes": []
+    },
+    {
+        "Id": "161c41b0-9c63-11ee-a01e-3ff08dbff8ed",
+        "Title": "Des boules de Noël",
+        "Description": "Ah que les boules de Noël sont brillantes dans un sapin en couleur!",
+        "Shared": true,
+        "Image": "d1fedbe0-9c63-11ee-893c-39cd41e77c4c.jpeg",
+        "OwnerId": "494fee50-99cb-11ee-a376-a1ed6063adaa",
+        "Likes": [],
+        "Date": 1702766303
     }
 ]

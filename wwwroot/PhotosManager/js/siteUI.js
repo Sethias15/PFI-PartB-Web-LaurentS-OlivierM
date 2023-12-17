@@ -440,14 +440,14 @@ async function renderPhotosList() {
             if (p.Likes != null) {
                 let usersLike = "";
                 let iconClass = "fa-regular fa-thumbs-up";
-                for (let l of p.Likes.Users) {
+                for (let l of p.UsersLikes) {
                     usersLike += l.Name + "\n";
                     if (l.Id == loggedUser.Id) {
                         iconClass = "fa fa-thumbs-up";
                     }
                 }
                 likesMsg = `
-                    <div class="likeCount">${p.Likecount}</div>
+                    <div class="likeCount">${p.LikeCount}</div>
                     <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
                 `;
             }
@@ -506,20 +506,19 @@ async function handleUserLike(e) {
     let p = await API.GetPhotosById(id);
     let loggedUser = await API.retrieveLoggedUser();
     if (p != null && loggedUser != null) {
-        let likes = (({ Id, UsersId }) => ({ Id, UsersId }))(p.Likes);
-        //console.log(likes);
-        let index = likes.UsersId.indexOf(loggedUser.Id);
+        let updatedPhoto = (({ Id, OwnerId, Title, Description, Image, Date, Shared, Likes }) =>
+            ({ Id, OwnerId, Title, Description, Image, Date, Shared, Likes }))(p);
+        let index = updatedPhoto.Likes.indexOf(loggedUser.Id);
         if (index > -1) {
-            likes.UsersId.splice(index, 1);
+            updatedPhoto.Likes.splice(index, 1);
         } else {
-            likes.UsersId.push(loggedUser.Id);
+            updatedPhoto.Likes.push(loggedUser.Id);
         }
-        divLikeCount.innerHTML = likes.UsersId.length;
-        API.LikePhoto(likes);
+        updatedPhoto.Image = updatedPhoto.Image.split("assetsRepository/")[1];
+        console.log(updatedPhoto);
+        divLikeCount.innerHTML = updatedPhoto.Likes.length;
+        API.UpdatePhoto(updatedPhoto);
     }
-}
-function hasUserLiked() {
-
 }
 async function renderDetails(id) {
     eraseContent();
@@ -1048,6 +1047,7 @@ async function renderEditPhoto(photoId) {
         let newPhoto = getFormData($('#editPhotoForm'));
         newPhoto.Id = selectedPhoto.Id;
         newPhoto.OwnerId = selectedPhoto.Owner.Id;
+        newPhoto.Likes = selectedPhoto.Likes;
         newPhoto.Date = Date.now() / 1000;
         if (newPhoto.Shared == null) {
             newPhoto.Shared = false;
@@ -1130,6 +1130,7 @@ function renderCreatePhoto(missingImgMsg = null, descText = null, titleText = nu
         let photo = getFormData($('#createPhotoForm'));
         if (photo.Image != "") {
             photo.OwnerId = API.retrieveLoggedUser().Id
+            photo.Likes = Array();
             event.preventDefault();
             showWaitingGif();
             createPhoto(photo);
