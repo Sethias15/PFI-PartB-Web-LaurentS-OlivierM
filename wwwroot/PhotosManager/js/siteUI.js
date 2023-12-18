@@ -590,48 +590,48 @@ async function renderDetails(id) {
     } else {
         isLoggedUserAdmin = false;
     }
-    if (p != null) {
-        if (p.Shared || p.OwnerId == loggedUser.Id) {
-            let likesMsg = `
-                <div>0</div>
-                <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
-            `;
-            if (p.Likes != null) {
-                let usersLike = "";
-                let iconClass = "fa-regular fa-thumbs-up";
-                for (let l of p.UsersLikes) {
-                    usersLike += l.Name + "\n";
-                    if (l.Id == loggedUser.Id) {
-                        iconClass = "fa fa-thumbs-up";
-                    }
+    if (p != null && (p.Shared || p.OwnerId == loggedUser.Id)) {
+        let likesMsg = `
+            <div>0</div>
+            <div class="cmdIcon fa-regular fa-thumbs-up" id="likePhotoCmd" title="Aimer la photo"></div>
+        `;
+        if (p.Likes != null) {
+            let usersLike = "";
+            let iconClass = "fa-regular fa-thumbs-up";
+            for (let l of p.UsersLikes) {
+                usersLike += l.Name + "\n";
+                if (l.Id == loggedUser.Id) {
+                    iconClass = "fa fa-thumbs-up";
                 }
-                likesMsg = `
-                    <div class="likeCount">${p.Likecount}</div>
-                    <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
-                `;
             }
-            $("#content").append(`
-            <div class="photoLayout">
-                <div class="photoDetailsTitleContainer">
-                    <h1 class="photoDetailsTitle">${p.Title}</h1>
-                    ${p.OwnerId == loggedUser.Id || isLoggedUserAdmin ? `
-                    <div class="editPhotoCmd cmdIcon fa-solid fa-pencil" title="Modifier les informations de la photo" photoId="${p.Id}"></div>
-                    <div class="deletePhotoCmd cmdIcon fa-solid fa-trash" photoId="${p.Id}" title="Supprimer cette photo"></div> ` : ""}
-                </div>
-                <div class="photoDetailsLargeImage" style="background-image:url('${p.Image}')">
-                    <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.Ownername}"></div>
-                    ${p.Shared && p.OwnerId == loggedUser.Id ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')" title="Partagé"></div>` : ""}
-                </div>
-                <div class="photoDetailsCreationDate">
-                    <div>${formatDate(p.Date)}</div>
-                    <div class="likesSummary">${likesMsg}</div>
-                </div>
-                <div class="photoDetailsDescription">
-                    <div>${p.Description}</div>
-                </div>
-                <input type="hidden" name="photoId" value="${p.Id}">
-            </div>`);
+            likesMsg = `
+                <div class="likeCount">${p.Likecount}</div>
+                <div class="cmdIcon ${iconClass}" id="likePhotoCmd" title="${usersLike}"></div>
+            `;
         }
+        $("#content").append(`
+        <div class="photoLayout">
+            <div class="photoDetailsTitleContainer">
+                <h1 class="photoDetailsTitle">${p.Title}</h1>
+                ${p.OwnerId == loggedUser.Id || isLoggedUserAdmin ? `
+                <div class="editPhotoCmd cmdIcon fa-solid fa-pencil" title="Modifier les informations de la photo" photoId="${p.Id}"></div>
+                <div class="deletePhotoCmd cmdIcon fa-solid fa-trash" photoId="${p.Id}" title="Supprimer cette photo"></div> ` : ""}
+            </div>
+            <div class="photoDetailsLargeImage" style="background-image:url('${p.Image}')">
+                <div class="UserAvatarSmall" style="background-image:url('${p.Owner.Avatar}')" title="${p.Ownername}"></div>
+                ${p.Shared && p.OwnerId == loggedUser.Id ? `<div class="sharedIcon" style="background-image:url('./images/shared.png')" title="Partagé"></div>` : ""}
+            </div>
+            <div class="photoDetailsCreationDate">
+                <div>${formatDate(p.Date)}</div>
+                <div class="likesSummary">${likesMsg}</div>
+            </div>
+            <div class="photoDetailsDescription">
+                <div>${p.Description}</div>
+            </div>
+            <input type="hidden" name="photoId" value="${p.Id}">
+        </div>`);
+    } else {
+        renderPhotos();
     }
     $('#content *').off();
     $('.fa-thumbs-up').on('click', (e) => {
