@@ -35,12 +35,15 @@ async function Init_UI() {
     else
         renderLoginForm();
 }
-function start_Periodic_Refresh() {
+function start_Periodic_Refresh(viewName, id) {
     refreshIntervalId = setInterval(async () => {
         let etag = await API.GetPhotosETag();
         if (currentETag != etag) {
             currentETag = etag;
-            renderPhotos();
+            if (viewName == "photosList")
+                renderPhotos();
+            else if (viewName == "photoDetails" && id != null)
+                renderDetails(id);
         }
     },
         periodicRefreshPeriod * 1000);
@@ -190,10 +193,10 @@ function connectedUserAvatar() {
 function refreshHeader() {
     UpdateHeader(currentViewTitle, currentViewName);
 }
-function UpdateHeader(viewTitle, viewName) {
-    if (viewName == "photosList") {
-        if (refreshIntervalId == -1)
-            start_Periodic_Refresh();
+function UpdateHeader(viewTitle, viewName, id = null) {
+    if (viewName == "photosList" || viewName == "photoDetails") {
+        clear_Periodic_Refresh();
+        start_Periodic_Refresh(viewName, id);
     } else {
         clear_Periodic_Refresh();
     }
@@ -441,6 +444,7 @@ async function renderPhotos() {
     $("#newPhotoCmd").show();
     $("#abort").hide();
     let loggedUser = API.retrieveLoggedUser();
+    endOfData = false;
     if (loggedUser)
         renderPhotosList(true);
     else {
@@ -449,12 +453,6 @@ async function renderPhotos() {
 }
 async function renderPhotosList(refresh = false) {
     let queryString = refresh ? "?limit=" + (limit * (offset + 1)) + "&offset=" + 0 : "?limit=" + limit + "&offset=" + offset;
-    if (refresh) {
-        eraseContent();
-        saveContentScrollPosition();
-        $("#content").append(`<div class="photosLayout"></div>`);
-        $('#content').children().off();
-    }
     let loggedUser = await API.retrieveLoggedUser();
     if (!endOfData) {
         let photos = await API.GetPhotos(queryString + search + `&user=${loggedUser.Id}`);
@@ -462,6 +460,11 @@ async function renderPhotosList(refresh = false) {
         if (photos == null) {
             renderError();
             return;
+        }
+        if (refresh) {
+            eraseContent();
+            saveContentScrollPosition();
+            $("#content").append(`<div class="photosLayout"></div>`);
         }
         if (photos.data.length > 0) {
             $("#content").off();
@@ -483,24 +486,19 @@ async function renderPhotosList(refresh = false) {
     if (refresh)
         restoreContentScrollPosition();
     queryString = `?limit=${limit}&offset=${offset}`;
+    $('#content *').off();
     $('.photoImage').on('click', (e) => {
-        console.log("details");
         renderDetails(e.target.closest(".photoLayout").querySelector(`[name="photoId"]`).value);
     });
     $('.fa-thumbs-up').on('click', (e) => {
-        console.log("like");
         $(e.target).toggleClass("fa fa-regular");
         handleUserLike(e);
     });
     $('.editPhotoCmd').on('click', (e) => {
-        console.log("edit");
-        let photoId = $(e.currentTarget).attr("photoId");
-        renderEditPhoto(photoId);
+        renderEditPhoto($(e.currentTarget).attr("photoId"));
     });
     $('.deletePhotoCmd').on('click', (e) => {
-        console.log("delete");
-        let photoId = $(e.currentTarget).attr("photoId");
-        renderDeletePhoto(photoId);
+        renderDeletePhoto($(e.currentTarget).attr("photoId"));
     });
 }
 function renderPhoto(p, loggedUser, isLoggedUserAdmin) {
@@ -583,7 +581,7 @@ async function handleUserLike(e) {
 }
 async function renderDetails(id) {
     eraseContent();
-    UpdateHeader('Détails', 'photoDetails');
+    UpdateHeader('Détails', 'photoDetails', id);
     let loggedUser = await API.retrieveLoggedUser();
     let p = await API.GetPhotosById(id);
     let isLoggedUserAdmin;
@@ -635,7 +633,7 @@ async function renderDetails(id) {
             </div>`);
         }
     }
-
+    $('#content *').off();
     $('.fa-thumbs-up').on('click', (e) => {
         $(e.target).toggleClass("fa fa-regular");
         handleUserLike(e);
