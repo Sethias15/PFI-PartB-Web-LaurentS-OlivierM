@@ -1,4 +1,5 @@
 //<span class="cmdIcon fa-solid fa-ellipsis-vertical"></span>
+const periodicRefreshPeriod = 1;
 let contentScrollPosition = 0;
 let sortType = "date";
 let keywords = "";
@@ -21,9 +22,11 @@ let offset = 0;
 let endOfData = false;
 let search = "";
 let checkedOption = "";
+let refreshIntervalId = -1;
 
 Init_UI();
-function Init_UI() {
+async function Init_UI() {
+    currentETag = await API.GetPhotosETag();
     getViewPortPhotosRanges();
     initTimeout(delayTimeOut, renderExpiredSession);
     installWindowResizeHandler();
@@ -32,7 +35,22 @@ function Init_UI() {
     else
         renderLoginForm();
 }
-
+function start_Periodic_Refresh() {
+    refreshIntervalId = setInterval(async () => {
+        let etag = await API.GetPhotosETag();
+        if (currentETag != etag) {
+            currentETag = etag;
+            renderPhotos();
+        }
+    },
+        periodicRefreshPeriod * 1000);
+}
+function clear_Periodic_Refresh() {
+    if (refreshIntervalId != -1) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = -1;
+    }
+}
 // pour la pagination
 function getViewPortPhotosRanges() {
     // estimate the value of limit according to height of content
@@ -173,6 +191,12 @@ function refreshHeader() {
     UpdateHeader(currentViewTitle, currentViewName);
 }
 function UpdateHeader(viewTitle, viewName) {
+    if (viewName == "photosList") {
+        if (refreshIntervalId == -1)
+            start_Periodic_Refresh();
+    } else {
+        clear_Periodic_Refresh();
+    }
     currentViewTitle = viewTitle;
     currentViewName = viewName;
     $("#header").empty();
@@ -413,7 +437,7 @@ function renderAbout() {
 async function renderPhotos() {
     timeout();
     showWaitingGif();
-    UpdateHeader('Liste des photos', 'photosList')
+    UpdateHeader('Liste des photos', 'photosList');
     $("#newPhotoCmd").show();
     $("#abort").hide();
     let loggedUser = API.retrieveLoggedUser();
@@ -429,10 +453,10 @@ async function renderPhotosList(refresh = false) {
         eraseContent();
         saveContentScrollPosition();
         $("#content").append(`<div class="photosLayout"></div>`);
+        $('#content').children().off();
     }
     let loggedUser = await API.retrieveLoggedUser();
     if (!endOfData) {
-        console.log(queryString + search + `&user=${loggedUser.Id}`);
         let photos = await API.GetPhotos(queryString + search + `&user=${loggedUser.Id}`);
         let isLoggedUserAdmin = loggedUser.Authorizations["readAccess"] == 2 && loggedUser.Authorizations["writeAccess"] == 2;
         if (photos == null) {
@@ -445,11 +469,10 @@ async function renderPhotosList(refresh = false) {
                 renderPhoto(p, loggedUser, isLoggedUserAdmin);
             }
             $("#content").on("scroll", function () {
-                //console.log($("#content").scrollTop())
                 if ($("#content").scrollTop() + $("#content").innerHeight() > ($(".photosLayout").height())) {
                     $("#content").off();
+
                     offset++;
-                    console.log(offset);
                     renderPhotosList();
                 }
             });
@@ -461,17 +484,21 @@ async function renderPhotosList(refresh = false) {
         restoreContentScrollPosition();
     queryString = `?limit=${limit}&offset=${offset}`;
     $('.photoImage').on('click', (e) => {
+        console.log("details");
         renderDetails(e.target.closest(".photoLayout").querySelector(`[name="photoId"]`).value);
     });
     $('.fa-thumbs-up').on('click', (e) => {
+        console.log("like");
         $(e.target).toggleClass("fa fa-regular");
         handleUserLike(e);
     });
     $('.editPhotoCmd').on('click', (e) => {
+        console.log("edit");
         let photoId = $(e.currentTarget).attr("photoId");
         renderEditPhoto(photoId);
     });
     $('.deletePhotoCmd').on('click', (e) => {
+        console.log("delete");
         let photoId = $(e.currentTarget).attr("photoId");
         renderDeletePhoto(photoId);
     });
@@ -556,6 +583,7 @@ async function handleUserLike(e) {
 }
 async function renderDetails(id) {
     eraseContent();
+    UpdateHeader('Détails', 'photoDetails');
     let loggedUser = await API.retrieveLoggedUser();
     let p = await API.GetPhotosById(id);
     let isLoggedUserAdmin;
